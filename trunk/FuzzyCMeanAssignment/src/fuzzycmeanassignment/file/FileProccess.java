@@ -4,7 +4,9 @@
  */
 package fuzzycmeanassignment.file;
 
+import fuzzycmeanassignment.algorithm.Point;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -15,60 +17,50 @@ import javax.swing.JFileChooser;
  * @author kubin
  */
 public class FileProccess {
-    
-    public static Vector<float[]> readFile(File file){
-	BufferedReader reader = null;
-	Vector<float[]> data = null; 
-	try {
-	    reader = new BufferedReader(new FileReader(file));
-	    String line = reader.readLine();
-	    while(line != null & !line.trim().equals("@data")){
-		line = reader.readLine();
-	    }
-	    line = reader.readLine();
-	    data = new Vector<float[]>(1000);
-	    while(line.length() <= 0){
-		line = reader.readLine();
-	    }
-	    
-	    while(line != null){
-		System.out.println("line = " + line);
-		data.add(convertToFloat(line));
-		line = reader.readLine();
-	    }
-	} catch (Exception ex) {
-	    Logger.getLogger(FileProccess.class.getName()).log(Level.SEVERE, null, ex);
-	} finally {
-	    try {
-		reader.close();
-	    } catch (IOException ex) {
-		Logger.getLogger(FileProccess.class.getName()).log(Level.SEVERE, null, ex);
-	    }
+
+    private Point[] data;
+    private long lastModified = 0;
+    private String fileName = "";
+
+    public FileProccess() {
+	lastModified = -1;
+	fileName = "";
+    }
+
+    public Point[] proccess(File file) {
+	if (fileName.equals(file.getAbsolutePath()) && lastModified == file.lastModified()) {
+	} else {
+	    fileName = file.getAbsolutePath();
+	    lastModified = file.lastModified();
+
+	    data = readFile(file);
 	}
 	return data;
     }
-    private Vector<float[]> data; 
-    
-    public FileProccess(File file){
+
+    public static Point[] readFile(File file) {
+
 	BufferedReader reader = null;
+
+	ArrayList<Point> data = null;
+	file.lastModified();
 	try {
 	    reader = new BufferedReader(new FileReader(file));
 	    String line = reader.readLine();
-	    while(line != null & !line.trim().equals("@data")){
+	    while (line != null & !line.trim().equals("@data")) {
 		line = reader.readLine();
 	    }
 	    line = reader.readLine();
-	    data = new Vector<float[]>(1000);
-	    while(line.length() <= 0){
+	    data = new ArrayList<Point>(1000);
+	    while (line.length() <= 0) {
 		line = reader.readLine();
 	    }
-	    
-	    while(line != null){
-		System.out.println("line = " + line);
+
+	    while (line != null) {
+//		System.out.println("line = " + line);
 		data.add(convertToFloat(line));
 		line = reader.readLine();
 	    }
-	    
 	} catch (Exception ex) {
 	    Logger.getLogger(FileProccess.class.getName()).log(Level.SEVERE, null, ex);
 	} finally {
@@ -78,25 +70,27 @@ public class FileProccess {
 		Logger.getLogger(FileProccess.class.getName()).log(Level.SEVERE, null, ex);
 	    }
 	}
-	
-    }
-    
-    private static float[] convertToFloat(String str){
-	String []arr = str.split(",");
-	float[] result = new float[3];
-	for(int i = 0; i < 3; i++){
-	    result[i] = Float.parseFloat(arr[i]);
-	}
-	
+	Point[]result = new Point[data.size()];
+	data.toArray(result);
 	return result;
     }
-    
-    public static void main(String []args){
+
+    private static Point convertToFloat(String str) {
+	String[] arr = str.split(",");
+	float[] tmp = new float[3];
+	for (int i = 0; i < 3; i++) {
+	    tmp[i] = Float.parseFloat(arr[i]);
+	}
+
+	return new Point(tmp[0], tmp[1], tmp[2]);
+    }
+
+    public static void main(String[] args) {
 	JFileChooser chooser = new JFileChooser();
 	chooser.showOpenDialog(null);
 	File file = chooser.getSelectedFile();
-	
-	
-	
+
+
+
     }
 }
