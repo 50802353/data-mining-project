@@ -4,6 +4,8 @@
  */
 package fuzzycmeanassignment;
 
+import javax.swing.UIManager;
+
 /**
  *
  * @author kubin
@@ -14,6 +16,12 @@ public class FuzzyCMeanAssignment {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-	// TODO code application logic here
+	try {
+	    UIManager.setLookAndFeel(
+		    UIManager.getSystemLookAndFeelClassName());
+	} catch (Exception e) {
+	}
+	FuzzyCMeanFrame fcmFrame = new FuzzyCMeanFrame();
+	fcmFrame.setVisible(true);
     }
 }
