@@ -80,6 +80,9 @@
           </Border>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="componentResized" listener="java.awt.event.ComponentListener" parameters="java.awt.event.ComponentEvent" handler="panelJoglComponentResized"/>
+      </Events>
 
       <Layout>
         <DimensionLayout dim="0">
@@ -201,6 +204,9 @@
           </Events>
         </Component>
         <Component class="javax.swing.JSpinner" name="spinCluster">
+          <Events>
+            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="spinClusterStateChanged"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel2">
           <Properties>

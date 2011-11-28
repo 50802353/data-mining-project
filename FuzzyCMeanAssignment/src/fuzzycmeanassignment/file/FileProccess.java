@@ -4,10 +4,13 @@
  */
 package fuzzycmeanassignment.file;
 
+import fuzzycmeanassignment.algorithm.ExtendPoint;
 import fuzzycmeanassignment.algorithm.Point;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
@@ -18,31 +21,36 @@ import javax.swing.JFileChooser;
  */
 public class FileProccess {
 
-    private Point[] data;
+    private ExtendPoint[] data;
     private long lastModified = 0;
     private String fileName = "";
+    public static Point pMax, pMin;
 
     public FileProccess() {
 	lastModified = -1;
 	fileName = "";
+	pMin = new Point(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+	pMax = new Point(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE);
+
     }
 
-    public Point[] proccess(File file) {
+    public ExtendPoint[] proccess(File file) {
 	if (fileName.equals(file.getAbsolutePath()) && lastModified == file.lastModified()) {
 	} else {
 	    fileName = file.getAbsolutePath();
 	    lastModified = file.lastModified();
-
+	    pMin = new Point(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
+	    pMax = new Point(Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE);
 	    data = readFile(file);
 	}
 	return data;
     }
 
-    public static Point[] readFile(File file) {
+    public static ExtendPoint[] readFile(File file) {
 
 	BufferedReader reader = null;
 
-	ArrayList<Point> data = null;
+	ArrayList<ExtendPoint> data = null;
 	file.lastModified();
 	try {
 	    reader = new BufferedReader(new FileReader(file));
@@ -51,16 +59,36 @@ public class FileProccess {
 		line = reader.readLine();
 	    }
 	    line = reader.readLine();
-	    data = new ArrayList<Point>(1000);
+	    data = new ArrayList<ExtendPoint>(1000);
 	    while (line.length() <= 0) {
 		line = reader.readLine();
 	    }
 
 	    while (line != null) {
 //		System.out.println("line = " + line);
-		data.add(convertToFloat(line));
+		ExtendPoint p = convertToFloat(line);
+		data.add(p);
+		if (p.x > pMax.x) {
+		    pMax.x = p.x;
+		} else if (p.x < pMin.x) {
+		    pMin.x = p.x;
+		}
+		if (p.y > pMax.y) {
+		    pMax.y = p.y;
+		} else if (p.y < pMin.y) {
+		    pMin.y = p.y;
+		}
+		if (p.z > pMax.z) {
+		    pMax.z = p.z;
+		} else if (p.z < pMin.z) {
+		    pMin.z = p.z;
+		}
+
 		line = reader.readLine();
 	    }
+	    
+	    System.out.println("Min : ["+pMin.x +", "+pMin.y+ ", " + pMin.z+ " ]");
+	    System.out.println("Max : ["+pMax.x +", "+pMax.y+ ", " + pMax.z+ " ]");
 	} catch (Exception ex) {
 	    Logger.getLogger(FileProccess.class.getName()).log(Level.SEVERE, null, ex);
 	} finally {
@@ -70,19 +98,26 @@ public class FileProccess {
 		Logger.getLogger(FileProccess.class.getName()).log(Level.SEVERE, null, ex);
 	    }
 	}
-	Point[]result = new Point[data.size()];
+	ExtendPoint[] result = new ExtendPoint[data.size()];
 	data.toArray(result);
 	return result;
     }
 
-    private static Point convertToFloat(String str) {
+    private static ExtendPoint convertToFloat(String str) {
 	String[] arr = str.split(",");
-	float[] tmp = new float[3];
+	double[] tmp = new double[3];
 	for (int i = 0; i < 3; i++) {
-	    tmp[i] = Float.parseFloat(arr[i]);
+	    tmp[i] = Double.parseDouble(arr[i]);
 	}
 
-	return new Point(tmp[0], tmp[1], tmp[2]);
+	return new ExtendPoint(tmp[0], tmp[1], tmp[2]);
+    }
+    
+    public Point getMin(){
+	return pMin;
+    }
+    public Point getMax(){
+	return pMax;
     }
 
     public static void main(String[] args) {
