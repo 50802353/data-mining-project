@@ -63,32 +63,24 @@ public class FileProccess {
 	    while (line.length() <= 0) {
 		line = reader.readLine();
 	    }
+	    
+	    ExtendPoint p = convertToFloat(line);
+	    pMin.x = pMax.x = p.x;
+	    pMin.y = pMax.y = p.y;
+	    pMin.z = pMax.z = p.z;
+	    data.add(p);
+	    line = reader.readLine();
 
 	    while (line != null) {
 //		System.out.println("line = " + line);
-		ExtendPoint p = convertToFloat(line);
+		p = convertToFloat(line);
 		data.add(p);
-		if (p.x > pMax.x) {
-		    pMax.x = p.x;
-		} else if (p.x < pMin.x) {
-		    pMin.x = p.x;
-		}
-		if (p.y > pMax.y) {
-		    pMax.y = p.y;
-		} else if (p.y < pMin.y) {
-		    pMin.y = p.y;
-		}
-		if (p.z > pMax.z) {
-		    pMax.z = p.z;
-		} else if (p.z < pMin.z) {
-		    pMin.z = p.z;
-		}
+		findMinMax(p);
+		
 
 		line = reader.readLine();
 	    }
-	    
-	    System.out.println("Min : ["+pMin.x +", "+pMin.y+ ", " + pMin.z+ " ]");
-	    System.out.println("Max : ["+pMax.x +", "+pMax.y+ ", " + pMax.z+ " ]");
+
 	} catch (Exception ex) {
 	    Logger.getLogger(FileProccess.class.getName()).log(Level.SEVERE, null, ex);
 	} finally {
@@ -103,6 +95,24 @@ public class FileProccess {
 	return result;
     }
 
+    private static void findMinMax(Point p) {
+	if (p.x > pMax.x) {
+	    pMax.x = p.x;
+	} else if (p.x < pMin.x) {
+	    pMin.x = p.x;
+	}
+	if (p.y > pMax.y) {
+	    pMax.y = p.y;
+	} else if (p.y < pMin.y) {
+	    pMin.y = p.y;
+	}
+	if (p.z > pMax.z) {
+	    pMax.z = p.z;
+	} else if (p.z < pMin.z) {
+	    pMin.z = p.z;
+	}
+    }
+
     private static ExtendPoint convertToFloat(String str) {
 	String[] arr = str.split(",");
 	double[] tmp = new double[3];
@@ -112,11 +122,12 @@ public class FileProccess {
 
 	return new ExtendPoint(tmp[0], tmp[1], tmp[2]);
     }
-    
-    public Point getMin(){
+
+    public Point getMin() {
 	return pMin;
     }
-    public Point getMax(){
+
+    public Point getMax() {
 	return pMax;
     }
 
