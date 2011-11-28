@@ -144,7 +144,7 @@ public class Fuzzy_C_Means_Demo {
     private void calColor(int index) {
 	int leng = clusters.length;
 	int count = 0;
-	double[] u = arrUDegrees[index];
+	double[] u = arrUDegrees[index]; // mức độ thành viên của 1 điểm vào điểm trung tâm
 	JoglColor p = points[index].color;
 	p.a = p.b = p.g = p.r = 0;
 	JoglColor pc;
@@ -158,14 +158,6 @@ public class Fuzzy_C_Means_Demo {
 		count++;
 	    }
 	}
-	if (count > 0) {
-	    p.a /= count;
-	    p.b /= count;
-	    p.g /= count;
-	    p.r /= count;
-	}
-
-
     }
 
     public double getM() {
