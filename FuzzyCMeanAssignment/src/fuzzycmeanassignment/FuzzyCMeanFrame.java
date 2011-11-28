@@ -135,7 +135,7 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 
         txtMValue.setText("2.0");
 
-        txtEpsilon.setText("0.1");
+        txtEpsilon.setText("0.00001");
 
         jLabel5.setText("Epsilon");
 
