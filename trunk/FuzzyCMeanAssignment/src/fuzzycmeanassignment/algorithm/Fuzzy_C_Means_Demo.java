@@ -1,10 +1,12 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * To change this template, choose Tools | Templates and open the template in
+ * the editor.
  */
 package fuzzycmeanassignment.algorithm;
 
 import fuzzycmeanassignment.file.FileProccess;
+import fuzzycmeanassignment.jogl.JoglColor;
+import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import javax.swing.JFileChooser;
@@ -18,139 +20,196 @@ public class Fuzzy_C_Means_Demo {
     /**
      * @param args the command line arguments
      */
-    
-    private double [][]mU;
-    private Point []mC;
-    private Point []xs;
+    private double[][] arrUDegrees;
+    private ExtendPoint[] clusters;
+    private ExtendPoint[] points;
     private double m;
-    
-    public Fuzzy_C_Means_Demo(Point []xs, int numberOfCluster, double m){
-        int leng = xs.length;
-        
-        //init U(0)
-        mU = new double[leng][];
-	
-        for(int i = 0; i < leng; i++){
-            mU[i] = new double[numberOfCluster];
-            for(int j = 0; j < numberOfCluster; j++){
-                mU[i][j] = (Math.random() * 23434 % 1000 > 500? 1 : 0);
+
+    public Fuzzy_C_Means_Demo() {
+    }
+
+    public Fuzzy_C_Means_Demo(ExtendPoint[] points, int numberOfCluster, double m) {
+	init(points, numberOfCluster, m);
+    }
+
+    public void reset(ExtendPoint[] points, int numberOfCluster, double m) {
+	init(points, numberOfCluster, m);
+    }
+
+    private void init(ExtendPoint[] points, int numberOfCluster, double m) {
+	int leng = points.length;
+
+	//init U(0)
+	arrUDegrees = new double[leng][];
+
+	for (int i = 0; i < leng; i++) {
+	    arrUDegrees[i] = new double[numberOfCluster];
+	    for (int j = 0; j < numberOfCluster; j++) {
+		arrUDegrees[i][j] = Math.random() * 1000 > 500 ? 0 : 1;
 //                System.out.print(mU[i][j] + "\t");
-            }
+	    }
 //            System.out.println("");
-        }
-        
-        //init C
-        mC = new Point[numberOfCluster];
-	
-	for(int i = 0; i < mC.length; i++){
-	    mC[i] = new Point();
-	    mC[i].copyFrom(xs[i]);
+	}
+
+	//init C
+	clusters = new ExtendPoint[numberOfCluster];
+
+	for (int i = 0; i < clusters.length; i++) {
+	    clusters[i] = new ExtendPoint();
+	    clusters[i].copyFrom(points[i]);
 //	    System.out.println("mC[" + i + "] = " + mC[i].x);
 	}
-	
-        //System.arraycopy(xs, 0, mC, 0, numberOfCluster);
-        
-        this.xs = xs;
-        this.m = m;
+
+	//System.arraycopy(xs, 0, mC, 0, numberOfCluster);
+
+	this.points = points;
+	this.m = m;
     }
-    
-    private void updateC(){
+
+    private void updateC() {
 	double cx, cy, cz, mau, uijm;
 	cx = cy = cz = mau = 0;
 	int i, j;
-	int cLeng = mC.length;
-	int xLeng = xs.length;
+	int cLeng = clusters.length;
+	int xLeng = points.length;
 	Point p;
-        for(j = 0; j < cLeng; j++){
+	for (j = 0; j < cLeng; j++) {
 //            mC[k] = calSumUmX(k)/calSumUm(k);
-	    for(i = 0; i < xLeng; i++){
-		p = xs[i];
-		uijm = Math.pow(mU[i][j], m);
+	    for (i = 0; i < xLeng; i++) {
+		p = points[i];
+		uijm = Math.pow(arrUDegrees[i][j], m);
 		cx += uijm * p.x;
 		cy += uijm * p.y;
 		cz += uijm * p.z;
 		mau += uijm;
 	    }
-	    
-	    mC[j].x = cx / mau;
-	    mC[j].y = cy / mau;
-	    mC[j].z = cz / mau;
-	    
-        }
+	    clusters[j].x = cx / mau;
+	    clusters[j].y = cy / mau;
+	    clusters[j].z = cz / mau;
+
+	    cx = cy = cz = mau = 0;
+	}
     }
-    
-    private double calUij(int i, int j){
-        double result = 0;
-        
-        double tu = Math.abs(xs[i].distance(mC[j]));
-        double mau = 0;
-        for(int k = 0; k < mC.length; k++){
-            
-            mau = Math.abs(xs[i].distance(mC[k]));
-            result += Math.pow(tu / mau, 2 / (m - 1));
-        }
-        
-        return 1 / result;
+
+    private double calUij(int i, int j) {
+	double result = 0;
+
+	double tu = Math.abs(points[i].distance(clusters[j]));
+	double mau = 0;
+	for (int k = 0; k < clusters.length; k++) {
+
+	    mau = Math.abs(points[i].distance(clusters[k]));
+	    result += Math.pow(tu / mau, 2 / (m - 1));
+	}
+
+	return 1 / result;
     }
-    
-    private double updateU(){
-        
-        double max = Float.MIN_VALUE;
-        
-        for(int i = 0; i < xs.length; i++){
-            for(int j = 0; j < mC.length; j++){
-                double nextUij = calUij(i, j);
-                double evalue = Math.abs(mU[i][j] - nextUij);
-                mU[i][j] = nextUij;
-                if(max < evalue){
-                    max = evalue;
-                }
-            }
-        }
-        
-        return max;
+
+    private double updateU() {
+
+	double max = Float.MIN_VALUE;
+
+	for (int i = 0; i < points.length; i++) {
+	    for (int j = 0; j < clusters.length; j++) {
+		double nextUij = calUij(i, j);
+		double evalue = Math.abs(arrUDegrees[i][j] - nextUij);
+		arrUDegrees[i][j] = nextUij;
+		if (max < evalue) {
+		    max = evalue;
+		}
+	    }
+	}
+
+	return max;
     }
-    
-    public void run(float epsilon){
-        double max = Double.MAX_VALUE;
-        int count = 0;
-        do{
-            updateC();
-            max = updateU();
+
+    public void run(double epsilon) {
+	double max = Double.MAX_VALUE;
+	int count = 0;
+	do {
+	    updateC();
+	    max = updateU();
 //            System.out.println("count = " + count + "\t max = " + max);
-            count++;
-            
-        }while (max > epsilon);
+	    count++;
+
+	} while (max > epsilon);
 	System.out.println("count = " + count + "\t max = " + max);
-          
+
+	int leng = points.length;
+	for(int i = 0; i < leng; i++){
+	    calColor(i);
+	}
     }
-    
-    public void print(){
-        System.out.println("C :");
-        for(int i = 0 ; i < mC.length; i++){
-            mC[i].print();
-        }
-        System.out.println("");
-        System.out.println("U");
-        for(int i = 0; i < xs.length; i++){
-            for(int j = 0; j < mC.length; j++){
-                System.out.print(mU[i][j] + ",\t");
-            }
-            
-            System.out.println("");
-        }
+
+    private void calColor(int index) {
+	int leng = clusters.length;
+	int count = 0;
+	double[] u = arrUDegrees[index];
+	JoglColor p = points[index].color;
+	p.a = p.b = p.g = p.r = 0;
+	JoglColor pc;
+	for (int i = 0; i < leng; i++) {
+	    if (u[i] > 0) {
+		pc = clusters[i].color;
+		p.a += pc.a * u[i];
+		p.b += pc.b * u[i];
+		p.g += pc.g * u[i];
+		p.r += pc.r * u[i];
+		count++;
+	    }
+	}
+	if (count > 0) {
+	    p.a /= count;
+	    p.b /= count;
+	    p.g /= count;
+	    p.r /= count;
+	}
+
+
     }
-    
+
+    public double getM() {
+	return m;
+    }
+
+    public ExtendPoint[] getClusters() {
+	return clusters;
+    }
+
+    public double[][] getmU() {
+	return arrUDegrees;
+    }
+
+    public Point[] getXs() {
+	return points;
+    }
+
+    public void print() {
+	System.out.println("C :");
+	for (int i = 0; i < clusters.length; i++) {
+	    clusters[i].print();
+	}
+	System.out.println("");
+	System.out.println("U");
+	for (int i = 0; i < points.length; i++) {
+	    for (int j = 0; j < clusters.length; j++) {
+		System.out.print(arrUDegrees[i][j] + ",\t");
+	    }
+
+	    System.out.println("");
+	}
+    }
+
     public static void main(String[] args) {
-        // TODO code application logic here
-	
+	// TODO code application logic here
+
 	File file = new File("D:/sample.txt");
-	Point[] xs = FileProccess.readFile(file);
+	ExtendPoint[] xs = FileProccess.readFile(file);
 	System.out.println("xs[0] = " + xs[0].x);
-        Fuzzy_C_Means_Demo fcm = new Fuzzy_C_Means_Demo(xs, 3, 2.0);
-        fcm.run(0.00001f);
-        fcm.print();
-        
-        
+	Fuzzy_C_Means_Demo fcm = new Fuzzy_C_Means_Demo(xs, 5, 2.0);
+	fcm.run(0.00001f);
+	fcm.print();
+
+
     }
 }

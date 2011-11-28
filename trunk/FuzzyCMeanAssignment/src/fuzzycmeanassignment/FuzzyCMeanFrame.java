@@ -4,11 +4,25 @@
  */
 package fuzzycmeanassignment;
 
+import fuzzycmeanassignment.algorithm.ExtendPoint;
+import fuzzycmeanassignment.algorithm.Fuzzy_C_Means_Demo;
 import fuzzycmeanassignment.algorithm.Point;
 import fuzzycmeanassignment.file.FileProccess;
+import fuzzycmeanassignment.jogl.Renderer;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.io.File;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLProfile;
+import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 
 /**
  *
@@ -16,11 +30,26 @@ import javax.swing.JOptionPane;
  */
 public class FuzzyCMeanFrame extends javax.swing.JFrame {
 
+    public static final String[] COL_NAMES = {"ID", "X", "Y", "Z", "Color"};
+    private Renderer render;
     /**
      * Creates new form FuzzyCMeanFrame
      */
     public FuzzyCMeanFrame() {
 	initComponents();
+	spinCluster.setValue(new Integer(5));
+	GLProfile glp = GLProfile.get(GLProfile.GL2);
+	GLCapabilities glc = new GLCapabilities(glp);
+
+	canvas = new GLCanvas(glc);
+	canvas.setPreferredSize(new Dimension(panelJogl.getWidth(), panelJogl.getHeight()));
+	canvas.setBounds(0, 0, panelJogl.getWidth(), panelJogl.getHeight());
+	render = new Renderer(canvas);
+	canvas.addGLEventListener(render);
+
+	panelJogl.add(canvas);
+
+	fcm = new Fuzzy_C_Means_Demo();
     }
 
     /** This method is called from within the constructor to
@@ -55,6 +84,11 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
         setPreferredSize(new java.awt.Dimension(1024, 668));
 
         panelJogl.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        panelJogl.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                panelJoglComponentResized(evt);
+            }
+        });
 
         javax.swing.GroupLayout panelJoglLayout = new javax.swing.GroupLayout(panelJogl);
         panelJogl.setLayout(panelJoglLayout);
@@ -86,6 +120,12 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
         btnRun.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnRunActionPerformed(evt);
+            }
+        });
+
+        spinCluster.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                spinClusterStateChanged(evt);
             }
         });
 
@@ -290,22 +330,93 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 	if (fileInput == null) {
 	    JOptionPane.showMessageDialog(this, "Please choose input file first", "Error",
 		    JOptionPane.ERROR_MESSAGE);
-	    return;
+	    txtInputFile.requestFocus();
 	} else {
 	    if (fileProccess == null) {
 		fileProccess = new FileProccess();
 	    }
 	    points = fileProccess.readFile(fileInput);
-	    
+	    pMin = fileProccess.pMin;
+	    pMax = fileProccess.pMax;
+	    String strMValue = txtMValue.getText();
+	    String strEpsilon = txtEpsilon.getText();
+
+	    try {
+		mValue = Double.parseDouble(strMValue);
+
+	    } catch (Exception e) {
+		JOptionPane.showMessageDialog(this, "Please enter valid number", "Error",
+			JOptionPane.ERROR_MESSAGE);
+		txtMValue.requestFocus();
+		txtMValue.setSelectionStart(0);
+		return;
+	    }
+	    try {
+		epsilon = Double.parseDouble(strEpsilon);
+	    } catch (Exception e) {
+		JOptionPane.showMessageDialog(this, "Please enter valid number", "Error",
+			JOptionPane.ERROR_MESSAGE);
+		txtEpsilon.requestFocus();
+		txtEpsilon.setSelectionStart(0);
+		return;
+	    }
+	    numberOfCluster = (Integer) spinCluster.getValue();
+	    setCursor(Cursor.WAIT_CURSOR);
+	    btnRun.disable();
+	    reSolve();
+	    setCursor(Cursor.DEFAULT_CURSOR);
+	    btnRun.enable();
+
 	}
 
     }//GEN-LAST:event_btnRunActionPerformed
 
-	/**
+    private void reSolve() {
+	
+	fcm.reset(points, numberOfCluster, mValue);
+	fcm.run(epsilon);
+	clusters = fcm.getClusters();
+
+	DefaultTableModel model = new DefaultTableModel(COL_NAMES, 0);
+
+	tblCluster.setDefaultRenderer(Object.class, new CustomRender(clusters));
+
+	tblCluster.setModel(model);
+	for (int i = 0; i < clusters.length; i++) {
+	    model.addRow(clusters[i].toObject(i + 1));
+
+	}
+
+	TableColumnModel colModel = tblCluster.getColumnModel();
+	colModel.getColumn(0).setPreferredWidth(30);
+	colModel.getColumn(4).setPreferredWidth(40);
+
+	int midWidth = (tblCluster.getWidth() - 70) / 3;
+	for (int i = 1; i < 4; i++) {
+	    colModel.getColumn(i).setPreferredWidth(midWidth);
+	}
+	System.out.println("reSolve : points length = " + points.length);
+	render.reset(points, clusters, pMin, pMax);
+
+
+    }
+
+    private void spinClusterStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinClusterStateChanged
+	int nc = (Integer) spinCluster.getValue();
+	if (nc <= 0) {
+	    spinCluster.setValue(1);
+	}
+    }//GEN-LAST:event_spinClusterStateChanged
+
+    private void panelJoglComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_panelJoglComponentResized
+	if (canvas != null) {
+	    canvas.setBounds(0, 0, panelJogl.getWidth(), panelJogl.getHeight());
+	}
+    }//GEN-LAST:event_panelJoglComponentResized
+
+    /**
 	 * @param args the command line arguments
 	 */
-    
-
     public static void main(String args[]) {
 	/*
 	 * Set the Nimbus look and feel
@@ -339,6 +450,7 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 	 */
 	java.awt.EventQueue.invokeLater(new Runnable() {
 
+	    @Override
 	    public void run() {
 		new FuzzyCMeanFrame().setVisible(true);
 	    }
@@ -349,7 +461,14 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
     private File fileInput;
     private File fileOutput;
     private FileProccess fileProccess;
-    private Point[] points;
+    private ExtendPoint[] points;
+    private ExtendPoint[] clusters;
+    private Point pMin, pMax;
+    private int numberOfCluster;
+    private double mValue;
+    private double epsilon;
+    private GLCanvas canvas;
+    private Fuzzy_C_Means_Demo fcm;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnExport;
     private javax.swing.JButton btnInputChoose;
@@ -369,4 +488,33 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
     private javax.swing.JTextField txtInputFile;
     private javax.swing.JTextField txtMValue;
     // End of variables declaration//GEN-END:variables
+}
+
+class CustomRender extends DefaultTableCellRenderer {
+
+    private ExtendPoint[] clusters;
+
+    public CustomRender(ExtendPoint[] clusters) {
+	super();
+	this.clusters = clusters;
+    }
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, final int row, int column) {
+
+	if (column == 4) {
+	    JPanel p = new JPanel();
+	    JPanel pp = new JPanel();
+//	    pp.setBounds(0,-5, 30, 20);
+	    pp.setBackground(clusters[row].color.toColor());
+
+	    p.add(pp);
+	    return p;
+	} else {
+	    Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+	    //c.setBackground(Color.white);
+	    return c;
+//	    
+	}
+    }
 }
