@@ -24,6 +24,7 @@ public class Renderer implements GLEventListener {
     private ExtendPoint[] clusters;
     private Point pMin, pMax;
     private GLCanvas canvas;
+    private int width, height;
 
     public Renderer() {
     }
@@ -45,43 +46,53 @@ public class Renderer implements GLEventListener {
     public void display(GLAutoDrawable gLDrawable) {
 	final GL2 gl = gLDrawable.getGL().getGL2();
 	gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
-//
-//	gl.glColor3d(1.0, 1.0, 1.0);
-//	gl.glBegin(GL2.GL_POLYGON);
-//	gl.glVertex3d(100, 100, 0.0);
-//	gl.glVertex3d(150, 100, 0.0);
-//	gl.glVertex3d(150, 150, 0.0);
-//	gl.glVertex3d(100, 150, 0.0);
-//	gl.glEnd();
-
-
-//	gl.glLineWidth(3);
 	if (points != null) {
 	    System.out.println("display with points");
-	    gl.glOrtho(pMin.x, pMax.x, pMin.y, pMax.y, -100, 100);
-	    System.out.println(pMin.x + ", " + pMax.x + ", " + pMin.y + ", " + pMax.y + ", " + pMin.z + ", " + pMax.z);
+	    gl.glMatrixMode(GL2.GL_PROJECTION);
+	    gl.glLoadIdentity();
+	    gl.glOrtho(pMin.x, pMax.x, pMin.y, pMax.y, -100000, 100000);
+//	    gl.glOrtho(100, 200, 100, 200, -200, 200);
+//	    gl.glMatrixMode(GL2.GL_PROJECTION);
+//	    gl.glLoadIdentity();
+//	    gl.glOrtho(100, 200, 100, 200, -100, 100);
+//
+//	    gl.glMatrixMode(GL2.GL_MODELVIEW);
+//	    gl.glLoadIdentity();
+//	    gl.glOrtho(100, 200, 100, 200, 100, 200);
 	    gl.glBegin(GL2.GL_POINTS);
+//	    gl.glPointSize(2);
 	    for (ExtendPoint p : points) {
 		drawPoint(gl, p);
 	    }
+
+	    GLU glu = new GLU();
+	    //glu.gluSphere(null, width, width, width);//nhieu day?
 	    gl.glEnd();
+//	    gl.glPointSize(4);
+	    for (ExtendPoint p : clusters) {
+		gl.glColor3d(p.color.r, p.color.g, p.color.b);
+		gl.glBegin(GL2.GL_POLYGON);
+		gl.glVertex3d(p.x - 80, p.y - 80, 0);
+		gl.glVertex3d(p.x + 80, p.y - 80, 0);
+		gl.glVertex3d(p.x + 80, p.y + 80, 0);
+		gl.glVertex3d(p.x - 80, p.y + 80, 0);
+		gl.glEnd();
+	    }
+
+//	    for (int i = 0; i < 5; i++) {
+//		ExtendPoint p = new ExtendPoint(Math.random() * 100 + 100, Math.random() * 100 + 100, Math.random() * 100 + 100);
+//		drawPoint(gl, p);
+//	    }
+
 	    gl.glFlush();
 	}
 
-
-//	gl.glBegin(GL2.GL_POINTS);
-//	gl.glVertex3d(150, 150, 0);
-//	gl.glVertex3d(160, 150, 0);
-//	gl.glEnd();
-
-
-//	gl.glFlush();
     }
 
     private void drawPoint(GL2 gl, ExtendPoint p) {
-	System.out.println("drawPoint " + p.x + ", " + p.y + ", " + p.z);
+	//System.out.println("drawPoint " + p.x + ", " + p.y + ", " + p.z);
 	gl.glColor3d(p.color.r, p.color.g, p.color.b);
-	gl.glVertex3d(p.x, p.y, 0);
+	gl.glVertex3d(p.x, p.y, p.z);
     }
 
     public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged) {
@@ -96,8 +107,8 @@ public class Renderer implements GLEventListener {
 	gl.glMatrixMode(GL2.GL_PROJECTION);
 	//gl.glShadeModel(GL2.GL_FLAT);
 	gl.glLoadIdentity();
-	gl.glPointSize(2);
-	//gl.glOrtho(100, 200, 100, 200, 100, 200);
+	//gl.glPointSize(4);
+	gl.glOrtho(100, 200, 100, 200, 100, 200);
 
 
     }
@@ -110,7 +121,8 @@ public class Renderer implements GLEventListener {
 	gl.glViewport(0, 0, width, height);
 	gl.glMatrixMode(GL2.GL_PROJECTION);
 	gl.glLoadIdentity();
-	gl.glOrtho(100, 200, 100, 200, -100, 100);
+	gl.glOrtho(100, 200, 100, 200, -100, 200);
+//	gl.glOrtho(5000, 50000, 5000, 50000, 5000, 50000);
 
 	gl.glMatrixMode(GL2.GL_MODELVIEW);
 	gl.glLoadIdentity();
