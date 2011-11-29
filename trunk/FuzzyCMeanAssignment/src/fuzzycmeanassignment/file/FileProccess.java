@@ -120,7 +120,7 @@ public class FileProccess {
 	    tmp[i] = Double.parseDouble(arr[i]);
 	}
 
-	return new ExtendPoint(tmp[0], tmp[1], tmp[2]);
+	return new ExtendPoint(tmp[0], tmp[1], tmp[2], false);
     }
 
     public Point getMin() {

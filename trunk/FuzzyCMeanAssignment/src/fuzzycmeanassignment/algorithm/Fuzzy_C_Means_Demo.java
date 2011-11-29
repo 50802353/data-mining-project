@@ -9,6 +9,7 @@ import fuzzycmeanassignment.jogl.JoglColor;
 import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Random;
 import javax.swing.JFileChooser;
 
 /**
@@ -24,28 +25,30 @@ public class Fuzzy_C_Means_Demo {
     private ExtendPoint[] clusters;
     private ExtendPoint[] points;
     private double m;
+    private int seed;
 
     public Fuzzy_C_Means_Demo() {
     }
 
-    public Fuzzy_C_Means_Demo(ExtendPoint[] points, int numberOfCluster, double m) {
-	init(points, numberOfCluster, m);
+    public Fuzzy_C_Means_Demo(ExtendPoint[] points, int numberOfCluster, double m, int seed) {
+	init(points, numberOfCluster, m, seed);
     }
 
-    public void reset(ExtendPoint[] points, int numberOfCluster, double m) {
-	init(points, numberOfCluster, m);
+    public void reset(ExtendPoint[] points, int numberOfCluster, double m, int seed) {
+	init(points, numberOfCluster, m, seed);
     }
 
-    private void init(ExtendPoint[] points, int numberOfCluster, double m) {
+    private void init(ExtendPoint[] points, int numberOfCluster, double m, int seed) {
 	int leng = points.length;
 
 	//init U(0)
 	arrUDegrees = new double[leng][];
-
+	Random random = new Random(seed);
+	
 	for (int i = 0; i < leng; i++) {
 	    arrUDegrees[i] = new double[numberOfCluster];
 	    for (int j = 0; j < numberOfCluster; j++) {
-		arrUDegrees[i][j] = Math.random() * 1000 > 500 ? 0 : 1;
+		arrUDegrees[i][j] = random.nextDouble();
 //                System.out.print(mU[i][j] + "\t");
 	    }
 //            System.out.println("");
@@ -54,8 +57,8 @@ public class Fuzzy_C_Means_Demo {
 	//init C
 	clusters = new ExtendPoint[numberOfCluster];
 
-	for (int i = 0; i < clusters.length; i++) {
-	    clusters[i] = new ExtendPoint();
+	for (int i = 0; i < numberOfCluster; i++) {
+	    clusters[i] = new ExtendPoint(true);
 	    clusters[i].copyFrom(points[i]);
 //	    System.out.println("mC[" + i + "] = " + mC[i].x);
 	}
@@ -129,7 +132,6 @@ public class Fuzzy_C_Means_Demo {
 	do {
 	    updateC();
 	    max = updateU();
-//            System.out.println("count = " + count + "\t max = " + max);
 	    count++;
 
 	} while (max > epsilon);
@@ -198,7 +200,7 @@ public class Fuzzy_C_Means_Demo {
 	File file = new File("D:/sample.txt");
 	ExtendPoint[] xs = FileProccess.readFile(file);
 	System.out.println("xs[0] = " + xs[0].x);
-	Fuzzy_C_Means_Demo fcm = new Fuzzy_C_Means_Demo(xs, 5, 2.0);
+	Fuzzy_C_Means_Demo fcm = new Fuzzy_C_Means_Demo(xs, 5, 2.0, 21);
 	fcm.run(0.00001f);
 	fcm.print();
 
