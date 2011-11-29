@@ -6,6 +6,7 @@ package fuzzycmeanassignment;
 
 import fuzzycmeanassignment.algorithm.ExtendPoint;
 import fuzzycmeanassignment.algorithm.Fuzzy_C_Means_Demo;
+import fuzzycmeanassignment.algorithm.GenerateColor;
 import fuzzycmeanassignment.algorithm.Point;
 import fuzzycmeanassignment.file.FileProccess;
 import fuzzycmeanassignment.jogl.Renderer;
@@ -13,6 +14,7 @@ import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.io.File;
+import java.util.Random;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
@@ -37,7 +39,7 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
      */
     public FuzzyCMeanFrame() {
 	initComponents();
-	spinCluster.setValue(new Integer(5));
+	spinCluster.setValue(new Integer(4));
 	GLProfile glp = GLProfile.get(GLProfile.GL2);
 	GLCapabilities glc = new GLCapabilities(glp);
 
@@ -50,6 +52,10 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 	panelJogl.add(canvas);
 
 	fcm = new Fuzzy_C_Means_Demo();
+	progress.setMaximum(100);
+	progress.setMinimum(0);
+	
+	random = new Random();
     }
 
     /** This method is called from within the constructor to
@@ -74,10 +80,13 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
         txtEpsilon = new javax.swing.JTextField();
         jLabel5 = new javax.swing.JLabel();
         btnExport = new javax.swing.JButton();
+        txtSeed = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblCluster = new javax.swing.JTable();
         jLabel4 = new javax.swing.JLabel();
         btnRefresh = new javax.swing.JButton();
+        progress = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Kây Bi Fuzzy C-Mean Demo");
@@ -147,6 +156,10 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
             }
         });
 
+        txtSeed.setText("31");
+
+        jLabel6.setText("Random seed");
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -162,9 +175,13 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(txtInputFile))
                             .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel6))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(spinCluster, javax.swing.GroupLayout.PREFERRED_SIZE, 63, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(txtSeed)
+                                    .addComponent(spinCluster, javax.swing.GroupLayout.DEFAULT_SIZE, 63, Short.MAX_VALUE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                     .addComponent(jLabel3)
@@ -194,7 +211,10 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel5)
-                    .addComponent(txtEpsilon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtEpsilon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel6)
+                        .addComponent(txtSeed, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(18, 18, 18)
                 .addComponent(btnRun)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -250,14 +270,18 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(layout.createSequentialGroup()
-                            .addGap(12, 12, 12)
-                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGroup(layout.createSequentialGroup()
-                            .addContainerGap()
-                            .addComponent(jLabel4))
-                        .addComponent(btnRefresh, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(12, 12, 12)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jLabel4))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(progress, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(btnRefresh, javax.swing.GroupLayout.PREFERRED_SIZE, 302, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 300, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -276,9 +300,11 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
                         .addGap(11, 11, 11)
                         .addComponent(jLabel4)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 373, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnRefresh)))
+                        .addComponent(btnRefresh)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(progress, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
 
@@ -327,6 +353,7 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 
     private void btnRunActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRunActionPerformed
 	// TODO add your handling code here:
+	progress.setValue(0);
 	if (fileInput == null) {
 	    JOptionPane.showMessageDialog(this, "Please choose input file first", "Error",
 		    JOptionPane.ERROR_MESSAGE);
@@ -340,7 +367,15 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 	    pMax = fileProccess.pMax;
 	    String strMValue = txtMValue.getText();
 	    String strEpsilon = txtEpsilon.getText();
-
+	    try{
+		seed = Integer.parseInt(txtSeed.getText().trim());
+	    }
+	    catch(Exception e){
+		JOptionPane.showMessageDialog(this, "Please enter valid number", "Error",
+			JOptionPane.ERROR_MESSAGE);
+		txtSeed.requestFocus();
+		txtSeed.setSelectionStart(0);
+	    }
 	    try {
 		mValue = Double.parseDouble(strMValue);
 
@@ -361,6 +396,10 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 		return;
 	    }
 	    numberOfCluster = (Integer) spinCluster.getValue();
+	    
+	    GenerateColor.reset();
+	    
+	    progress.setValue(10);
 	    setCursor(Cursor.WAIT_CURSOR);
 	    btnRun.disable();
 	    reSolve();
@@ -373,8 +412,11 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 
     private void reSolve() {
 	
-	fcm.reset(points, numberOfCluster, mValue);
+	
+	fcm.reset(points, numberOfCluster, mValue, seed);
+	progress.setValue(30);
 	fcm.run(epsilon);
+	progress.setValue(60);
 	clusters = fcm.getClusters();
 
 	DefaultTableModel model = new DefaultTableModel(COL_NAMES, 0);
@@ -396,9 +438,10 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
 	    colModel.getColumn(i).setPreferredWidth(midWidth);
 	}
 	System.out.println("reSolve : points length = " + points.length);
+	progress.setValue(70);
 	render.reset(points, clusters, pMin, pMax);
 
-
+	progress.setValue(100);
     }
 
     private void spinClusterStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_spinClusterStateChanged
@@ -467,6 +510,8 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
     private int numberOfCluster;
     private double mValue;
     private double epsilon;
+    private int seed;
+    private Random random;
     private GLCanvas canvas;
     private Fuzzy_C_Means_Demo fcm;
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -479,14 +524,17 @@ public class FuzzyCMeanFrame extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPanel panelJogl;
+    private javax.swing.JProgressBar progress;
     private javax.swing.JSpinner spinCluster;
     private javax.swing.JTable tblCluster;
     private javax.swing.JTextField txtEpsilon;
     private javax.swing.JTextField txtInputFile;
     private javax.swing.JTextField txtMValue;
+    private javax.swing.JTextField txtSeed;
     // End of variables declaration//GEN-END:variables
 }
 
