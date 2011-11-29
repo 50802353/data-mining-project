@@ -8,6 +8,8 @@ import fuzzycmeanassignment.algorithm.ExtendPoint;
 import fuzzycmeanassignment.algorithm.Point;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.media.opengl.*;
 import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.glu.GLU;
@@ -34,7 +36,6 @@ public class Renderer implements GLEventListener {
     }
 
     public void reset(ExtendPoint[] ps, ExtendPoint[] cs, Point min, Point max) {
-	System.out.println("reset : point length = " + ps.length);
 	points = ps;
 	clusters = cs;
 	pMin = min;
@@ -47,28 +48,13 @@ public class Renderer implements GLEventListener {
 	final GL2 gl = gLDrawable.getGL().getGL2();
 	gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 	if (points != null) {
-	    System.out.println("display with points");
 	    gl.glMatrixMode(GL2.GL_PROJECTION);
 	    gl.glLoadIdentity();
-	    gl.glOrtho(pMin.x, pMax.x, pMin.y, pMax.y, -100000, 100000);
-//	    gl.glOrtho(100, 200, 100, 200, -200, 200);
-//	    gl.glMatrixMode(GL2.GL_PROJECTION);
-//	    gl.glLoadIdentity();
-//	    gl.glOrtho(100, 200, 100, 200, -100, 100);
-//
-//	    gl.glMatrixMode(GL2.GL_MODELVIEW);
-//	    gl.glLoadIdentity();
-//	    gl.glOrtho(100, 200, 100, 200, 100, 200);
-	    gl.glBegin(GL2.GL_POINTS);
-//	    gl.glPointSize(2);
-	    for (ExtendPoint p : points) {
-		drawPoint(gl, p);
-	    }
-
-	    GLU glu = new GLU();
-	    //glu.gluSphere(null, width, width, width);//nhieu day?
-	    gl.glEnd();
-//	    gl.glPointSize(4);
+	    double min, max;
+	    min = (pMin.x > pMin.y ? pMin.y : pMin.x);
+	    max = (pMax.x > pMax.y ? pMax.x : pMax.y);
+	    gl.glOrtho(min, max, min, max, -100000, 100000);
+ 
 	    for (ExtendPoint p : clusters) {
 		gl.glColor3d(p.color.r, p.color.g, p.color.b);
 		gl.glBegin(GL2.GL_POLYGON);
@@ -78,11 +64,31 @@ public class Renderer implements GLEventListener {
 		gl.glVertex3d(p.x - 80, p.y + 80, 0);
 		gl.glEnd();
 	    }
-
-//	    for (int i = 0; i < 5; i++) {
-//		ExtendPoint p = new ExtendPoint(Math.random() * 100 + 100, Math.random() * 100 + 100, Math.random() * 100 + 100);
-//		drawPoint(gl, p);
-//	    }
+	    
+	    int numberOfThread = 10;
+	    int start = 0, end = -1;
+	    int length = points.length/numberOfThread;
+	    Thread []thr = new Thread[numberOfThread];
+	    
+	    for(int i = 0; i < numberOfThread; i++){
+		start = end + 1;
+		end = start + length;
+		if(end >= points.length)
+		    end = points.length - 1;
+		DrawRunable dr = new DrawRunable(gl, points, start, end);
+		thr[i] = new Thread(dr);
+		thr[i].start();
+	    }
+	    
+	    for(Thread t:thr){
+		try {
+		    t.join();
+		} catch (InterruptedException ex) {
+		    Logger.getLogger(Renderer.class.getName()).log(Level.SEVERE, null, ex);
+		}
+	    }
+	    
+	    
 
 	    gl.glFlush();
 	}
@@ -90,7 +96,6 @@ public class Renderer implements GLEventListener {
     }
 
     private void drawPoint(GL2 gl, ExtendPoint p) {
-	//System.out.println("drawPoint " + p.x + ", " + p.y + ", " + p.z);
 	gl.glColor3d(p.color.r, p.color.g, p.color.b);
 	gl.glVertex3d(p.x, p.y, p.z);
     }
@@ -107,7 +112,7 @@ public class Renderer implements GLEventListener {
 	gl.glMatrixMode(GL2.GL_PROJECTION);
 	//gl.glShadeModel(GL2.GL_FLAT);
 	gl.glLoadIdentity();
-	//gl.glPointSize(4);
+	//gl.glPointSize(2);
 	gl.glOrtho(100, 200, 100, 200, 100, 200);
 
 
@@ -134,30 +139,30 @@ public class Renderer implements GLEventListener {
 	System.out.println("dispose() called");
     }
 
-    public static void main(String[] args) {
-	// setup OpenGL Version 2
-	GLProfile profile = GLProfile.get(GLProfile.GL2);
-	GLCapabilities capabilities = new GLCapabilities(profile);
+    class DrawRunable implements Runnable {
 
-	// The canvas is the widget that's drawn in the JFrame
-	GLCanvas glcanvas = new GLCanvas(capabilities);
-	glcanvas.addGLEventListener(new Renderer() {
-	});
-	glcanvas.setSize(300, 300);
+	private ExtendPoint[] points;
+	private int start, end;
+	private GL2 gl;
 
-	JFrame frame = new JFrame("Hello World");
-	frame.getContentPane().add(glcanvas);
+	public DrawRunable(GL2 gl, ExtendPoint[] points, int start, int end) {
+	    this.gl = gl;
+	    this.points = points;
+	    this.start = start;
+	    this.end = end;
+	}
 
-	// shutdown the program on windows close event
-	frame.addWindowListener(new WindowAdapter() {
-
-	    @Override
-	    public void windowClosing(WindowEvent ev) {
-		System.exit(0);
+	@Override
+	public void run() {
+	    System.out.println("run: " + start + ", " + end);
+	    gl.glBegin(GL2.GL_POINTS);
+	    for (int i = start; i < end; i++) {
+		System.out.println("point " + i + " = " + points[i].x);
+		drawPoint(gl, points[i]);
 	    }
-	});
-
-	frame.setSize(frame.getContentPane().getPreferredSize());
-	frame.setVisible(true);
+	    gl.glEnd();
+	   
+	}
     }
+
 }

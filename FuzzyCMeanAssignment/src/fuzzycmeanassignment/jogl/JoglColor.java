@@ -14,7 +14,7 @@ public class JoglColor {
     public double a,r,g,b;
 
     public JoglColor() {
-	a = r = g = b = 0;
+	a = r = g = b = 1;
     }
 
     public JoglColor(double a, double r, double g, double b) {
