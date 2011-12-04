@@ -10,6 +10,8 @@ import java.awt.Color;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 
 /**
@@ -25,7 +27,11 @@ public class Fuzzy_C_Means_Demo {
     private ExtendPoint[] clusters;
     private ExtendPoint[] points;
     private double m;
-    private int seed;
+    
+    private final int numberOfThread = 10;
+    
+    Thread [] thrs;
+    CalRunable[] target;
 
     public Fuzzy_C_Means_Demo() {
     }
@@ -44,7 +50,7 @@ public class Fuzzy_C_Means_Demo {
 	//init U(0)
 	arrUDegrees = new double[leng][];
 	Random random = new Random(seed);
-	
+
 	for (int i = 0; i < leng; i++) {
 	    arrUDegrees[i] = new double[numberOfCluster];
 	    for (int j = 0; j < numberOfCluster; j++) {
@@ -67,6 +73,20 @@ public class Fuzzy_C_Means_Demo {
 
 	this.points = points;
 	this.m = m;
+	
+	thrs = new Thread[numberOfThread];
+	target = new CalRunable[numberOfThread];
+	int start, end, len;
+	end = 0;
+	len = points.length / numberOfThread;
+	for(int i = 0; i < numberOfThread; i++){
+	    start = end;
+	    end = start + len;
+	    target[i] = new CalRunable(arrUDegrees, clusters, points, m, start, end);
+	    thrs[i] = new Thread(target[i]);
+	    
+	}
+	
     }
 
     private void updateC() {
@@ -111,11 +131,14 @@ public class Fuzzy_C_Means_Demo {
     private double updateU() {
 
 	double max = Float.MIN_VALUE;
-
-	for (int i = 0; i < points.length; i++) {
-	    for (int j = 0; j < clusters.length; j++) {
-		double nextUij = calUij(i, j);
-		double evalue = Math.abs(arrUDegrees[i][j] - nextUij);
+	double nextUij;
+	double evalue;
+	int leng = points.length;
+	int numCluster = clusters.length;
+	for (int i = 0; i < leng; i++) {
+	    for (int j = 0; j < numCluster; j++) {
+		nextUij = calUij(i, j);
+		evalue = Math.abs(arrUDegrees[i][j] - nextUij);
 		arrUDegrees[i][j] = nextUij;
 		if (max < evalue) {
 		    max = evalue;
@@ -125,20 +148,45 @@ public class Fuzzy_C_Means_Demo {
 
 	return max;
     }
+    
+    private double updateU2(){
+	thrs = new Thread[numberOfThread];
+	for(int i = 0; i < numberOfThread; i++){
+	    thrs[i] = new Thread(target[i]);
+	    thrs[i].start();
+	}
+	
+	for(Thread t : thrs){
+	    try {
+		t.join();
+	    } catch (InterruptedException ex) {
+		Logger.getLogger(Fuzzy_C_Means_Demo.class.getName()).log(Level.SEVERE, null, ex);
+	    }
+	}
+	
+	double max = target[0].max;
+	for(CalRunable t:target){
+	    if(max < t.max){
+		max = t.max;
+	    }
+	}
+	
+	return max;
+    }
 
     public void run(double epsilon) {
 	double max = Double.MAX_VALUE;
 	int count = 0;
 	do {
 	    updateC();
-	    max = updateU();
+	    max = updateU2();
 	    count++;
 
 	} while (max > epsilon);
 	System.out.println("count = " + count + "\t max = " + max);
 
 	int leng = points.length;
-	for(int i = 0; i < leng; i++){
+	for (int i = 0; i < leng; i++) {
 	    calColor(i);
 	}
     }
@@ -191,6 +239,52 @@ public class Fuzzy_C_Means_Demo {
 	    }
 
 	    System.out.println("");
+	}
+    }
+
+    class CalRunable implements Runnable {
+
+	private double[][] arrUDegrees;
+	private ExtendPoint[] clusters;
+	private ExtendPoint[] points;
+	private double m;
+	private int start, end;
+	private int i;
+	private double max;
+
+	public CalRunable(double[][] arrUDegrees, ExtendPoint[] clusters, ExtendPoint[] points, double m) {
+	    this.arrUDegrees = arrUDegrees;
+	    this.clusters = clusters;
+	    this.points = points;
+	    this.m = m;
+	}
+
+	public CalRunable(double[][] arrUDegrees, ExtendPoint[] clusters, ExtendPoint[] points, double m, int start, int end) {
+	    this.arrUDegrees = arrUDegrees;
+	    this.clusters = clusters;
+	    this.points = points;
+	    this.m = m;
+	    this.start = start;
+	    this.end = end;
+	}
+
+	@Override
+	public void run() {
+	    max = Float.MIN_VALUE;
+	    double nextUij;
+	    double evalue;
+	    
+	    int numCluster = clusters.length;
+	    for (i = start; i < end; i++) {
+		for (int j = 0; j < numCluster; j++) {
+		    nextUij = calUij(i, j);
+		    evalue = Math.abs(arrUDegrees[i][j] - nextUij);
+		    arrUDegrees[i][j] = nextUij;
+		    if (max < evalue) {
+			max = evalue;
+		    }
+		}
+	    }
 	}
     }
 
